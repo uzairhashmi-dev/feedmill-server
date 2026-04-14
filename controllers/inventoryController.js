@@ -355,9 +355,10 @@ export const getMonthlyStats = async (req, res) => {
             {
               $group: {
                 _id: null,
-                monthlyTotalPrice:    { $sum: "$price" },
+                monthlyTotalPrice:   {$sum: { $multiply: ["$price", "$quantity"]}},
                 totalQuantity:        { $sum: "$quantity" },
               },
+              
             },
           ],
         },
