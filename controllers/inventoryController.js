@@ -1,10 +1,10 @@
 import inventoryModel from "../models/inventoryModel.js";
 import mongoose from "mongoose";
 
-// ─── Create Inventory Item ────────────────────────────────────────────────────
+
 export const createInventoryItem = async (req, res) => {
   try {
-    const { itemName, vendorName, price, quantity, status } = req.body;
+    const { itemName, vendorName, price, quantity, unit, status } = req.body;
     const userId = req.id;
     const userRole = req.role;
 
@@ -31,12 +31,19 @@ export const createInventoryItem = async (req, res) => {
         data: null,
       });
     }
+    const unitConversionMap = {
+      ton:    quantity * 1000,
+      liter:  quantity * 0.900,
+      kg:     quantity * 1,     
+    };
+     const quantityValue = unitConversionMap[unit] ?? quantity;
 
     const newItem = await inventoryModel.create({
       itemName,
       vendorName,
       price,
-      quantity,
+      quantity: quantityValue,
+      unit,
       status,
     });
 
@@ -45,18 +52,16 @@ export const createInventoryItem = async (req, res) => {
       success: true,
       data: newItem,
     });
-  } catch (err) {
+  }
+   catch (err) {
     console.error("createInventoryItem:", err);
     res.status(500).json({ message: "Server Error", success: false, data: null });
   }
 };
-
-// ─── Update Inventory Item ────────────────────────────────────────────────────
-// BUG FIX: original code set item.itemName = vendorName (copy-paste error)
 export const updateInventoryItem = async (req, res) => {
   try {
     const { id } = req.params;
-    const { itemName, vendorName, price, quantity, status } = req.body;
+    const { itemName, vendorName, price, quantity, status, unit } = req.body;
     const userId = req.id;
     const userRole = req.role;
 
@@ -103,13 +108,20 @@ export const updateInventoryItem = async (req, res) => {
         });
       }
     }
+     const unitConversionMap = {
+      ton:    quantity * 1000,
+      liter:  quantity * 0.900,
+      kg:     quantity * 1,     
+    };
+const quantityValue = unitConversionMap[unit] ?? quantity;
 
-    // ✅ BUG FIX: was `item.itemName = vendorName` — now correctly uses itemName
+
     if (itemName)   item.itemName   = itemName;
     if (vendorName) item.vendorName = vendorName;
     if (price !== undefined)    item.price    = price;
-    if (quantity !== undefined) item.quantity = quantity;
+    if (quantity !== undefined) item.quantity = quantityValue;
     if (status)     item.status     = status;
+    if (unit)       item.unit       = unit;
 
     await item.save();
 
@@ -123,8 +135,6 @@ export const updateInventoryItem = async (req, res) => {
     res.status(500).json({ message: "Server Error", success: false, data: null });
   }
 };
-
-// ─── Get All Inventory Items ──────────────────────────────────────────────────
 export const getAllInventoryItems = async (req, res) => {
   try {
     const userId = req.id;
@@ -146,8 +156,6 @@ export const getAllInventoryItems = async (req, res) => {
     res.status(500).json({ message: "Server Error", success: false, data: null });
   }
 };
-
-// ─── Get Single Inventory Item ────────────────────────────────────────────────
 export const getInventoryItemById = async (req, res) => {
   try {
     const { id } = req.params;
@@ -184,9 +192,6 @@ export const getInventoryItemById = async (req, res) => {
     res.status(500).json({ message: "Server Error", success: false, data: null });
   }
 };
-
-// ─── Delete Inventory Item ────────────────────────────────────────────────────
-// BUG FIX: frontend was calling delete/:${id} with a colon prefix — route is now correct
 export const deleteInventoryItem = async (req, res) => {
   try {
     const { id } = req.params;
@@ -232,8 +237,6 @@ export const deleteInventoryItem = async (req, res) => {
     res.status(500).json({ message: "Server Error", success: false, data: null });
   }
 };
-
-// ─── Search Inventory Items ───────────────────────────────────────────────────
 export const searchInventoryItems = async (req, res) => {
   try {
     const userId = req.id;
@@ -265,8 +268,6 @@ export const searchInventoryItems = async (req, res) => {
     res.status(500).json({ success: false, message: "Server Error" });
   }
 };
-
-// ─── Filtered Orders ──────────────────────────────────────────────────────────
 export const getFilteredOrders = async (req, res) => {
   try {
     const { search, status, startDate, endDate, minPrice, maxPrice } = req.query;
@@ -313,8 +314,6 @@ export const getFilteredOrders = async (req, res) => {
     res.status(500).json({ success: false, message: "Server Error" });
   }
 };
-
-// ─── Monthly Stats ────────────────────────────────────────────────────────────
 export const getMonthlyStats = async (req, res) => {
   try {
     const userId = req.id;
@@ -393,8 +392,6 @@ export const getMonthlyStats = async (req, res) => {
     res.status(500).json({ success: false, message: "Server Error" });
   }
 };
-
-// ─── Total Stats ──────────────────────────────────────────────────────────────
 export const getTotalStats = async (req, res) => {
   try {
     const userId = req.id;
@@ -448,4 +445,4 @@ export const getTotalStats = async (req, res) => {
     console.error("getTotalStats:", err);
     res.status(500).json({ success: false, message: "Server Error" });
   }
-};
+}

@@ -3,17 +3,17 @@ import inventoryModel from "../models/inventoryModel.js";
 import categoryModel from "../models/categoryModel.js";
 import mongoose from "mongoose";
 
-// ─── Helper: validate ingredients array ───────────────────────────────────────
+
 const validateIngredients = (ingredients) => {
   if (!Array.isArray(ingredients) || ingredients.length === 0) {
     return "Ingredients must be a non-empty array";
   }
-  for (const ing of ingredients) {
+  for(const ing of ingredients) {
     if (!ing.key || ing.value === undefined) {
       return "Each ingredient must have a 'key' (name) and 'value' (percentage)";
     }
     if (typeof ing.value !== "number" || ing.value <= 0) {
-      return `Ingredient '${ing.key}' must have a positive numeric percentage`;
+    return `Ingredient '${ing.key}' must have a positive numeric percentage`;
     }
   }
   const total = ingredients.reduce((s, i) => s + i.value, 0);
@@ -23,7 +23,6 @@ const validateIngredients = (ingredients) => {
   return null;
 };
 
-// ─── Helper: calculate cost per MT from ingredients ───────────────────────────
 const calcCostPerMT = async (ingredients) => {
   const MT_IN_KG = 1000;
   let total = 0;
@@ -44,7 +43,6 @@ const calcCostPerMT = async (ingredients) => {
   return { costPerMT: Math.round(total), missing };
 };
 
-// ─── Create Formula ───────────────────────────────────────────────────────────
 export const createFormula = async (req, res) => {
   try {
     const { formulaName, formulaCode, category, ingredients, description } = req.body;
@@ -133,7 +131,6 @@ export const createFormula = async (req, res) => {
   }
 };
 
-// ─── Update Formula ───────────────────────────────────────────────────────────
 export const updateFormula = async (req, res) => {
   try {
     const { id } = req.params;
@@ -233,9 +230,6 @@ export const updateFormula = async (req, res) => {
   }
 };
 
-// ─── Get All Formulas ─────────────────────────────────────────────────────────
-// BUG FIX: was returning 404 on empty — crashes frontend. Now always 200+[]
-// BUG FIX: populate field was "createdBy" but schema field is "created"
 export const getAllFormulas = async (req, res) => {
   try {
     const userId = req.id;
@@ -260,7 +254,6 @@ export const getAllFormulas = async (req, res) => {
   }
 };
 
-// ─── Get Single Formula ───────────────────────────────────────────────────────
 export const getFormulaById = async (req, res) => {
   try {
     const { id } = req.params;
@@ -293,7 +286,6 @@ export const getFormulaById = async (req, res) => {
   }
 };
 
-// ─── Delete Formula ───────────────────────────────────────────────────────────
 export const deleteFormula = async (req, res) => {
   try {
     const { id } = req.params;
@@ -330,9 +322,6 @@ export const deleteFormula = async (req, res) => {
   }
 };
 
-// ─── Search Formulas ──────────────────────────────────────────────────────────
-// BUG FIX: original tried $regex on category which is an ObjectId — crashes MongoDB
-// Now searches by formulaName and formulaCode only; category resolved via populate
 export const search = async (req, res) => {
   try {
     const userId     = req.id;

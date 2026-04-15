@@ -5,7 +5,6 @@ import mongoose from "mongoose";
 
 const MT_IN_KG = 1000;
 
-// ─── Helper: scale ingredients and calculate cost ─────────────────────────────
 const buildScaledIngredients = async (ingredients, targetMT) => {
   const scaledIngredients = [];
   const missingItems      = [];
@@ -50,9 +49,6 @@ const buildScaledIngredients = async (ingredients, targetMT) => {
   };
 };
 
-// ─── Create Production ────────────────────────────────────────────────────────
-// BUG FIX: controller stored field as `formulaId` but schema uses `formula`
-// BUG FIX: feedName duplicate check was looking in formulaModel, not productionModel
 export const createProduction = async (req, res) => {
   try {
     const { feedName, formulaId, targetMT, status } = req.body;
@@ -139,7 +135,6 @@ export const createProduction = async (req, res) => {
   }
 };
 
-// ─── Update Production ────────────────────────────────────────────────────────
 export const updateProduction = async (req, res) => {
   try {
     const { id } = req.params;
@@ -255,10 +250,6 @@ export const updateProduction = async (req, res) => {
   }
 };
 
-// ─── Get All Productions ──────────────────────────────────────────────────────
-// BUG FIX: was returning 404 on empty — crashes frontend. Now always 200+[]
-// BUG FIX: populate field was "formula" but controller stored as "formulaId" —
-//          now consistent: schema field is "formula", populated correctly
 export const getAllProductions = async (req, res) => {
   try {
     const userId = req.id;
@@ -283,7 +274,7 @@ export const getAllProductions = async (req, res) => {
   }
 };
 
-// ─── Get Single Production ────────────────────────────────────────────────────
+
 export const getProductionById = async (req, res) => {
   try {
     const { id } = req.params;
@@ -312,7 +303,6 @@ export const getProductionById = async (req, res) => {
   }
 };
 
-// ─── Delete Production ────────────────────────────────────────────────────────
 export const deleteProduction = async (req, res) => {
   try {
     const { id } = req.params;
@@ -345,8 +335,7 @@ export const deleteProduction = async (req, res) => {
   }
 };
 
-// ─── Search Productions ───────────────────────────────────────────────────────
-// BUG FIX: missing userId validation — added
+
 export const searchProduction = async (req, res) => {
   try {
     const userId     = req.id;

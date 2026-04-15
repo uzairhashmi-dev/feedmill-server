@@ -28,6 +28,12 @@ const inventorySchema = new mongoose.Schema(
       default: "Pending",
       required: true,
     },
+    unit: {
+      type: String,
+      enum: ["kg", "liter","ton"],
+      default: "kg",
+      required: true,
+    },
   },
   {
     timestamps: true,

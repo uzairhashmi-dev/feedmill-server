@@ -1,7 +1,7 @@
 import { body, validationResult } from "express-validator";
 
 export const inventoryValidator = [
-  body("itemName")
+body("itemName")
     .trim()
     .escape()
     .isString()
@@ -10,6 +10,13 @@ export const inventoryValidator = [
     .withMessage("Item name must contain alphabetic characters only")
     .isLength({ min: 3 })
     .withMessage("Item name must be at least 3 characters long"),
+  body("unit")
+    .trim()
+    .escape()
+    .isString()
+    .withMessage("Unit must be a string")
+    .isIn(["kg", "liter","ton"])
+    .withMessage("Unit must be one of: kg, liter,ton"),
 
   body("vendorName")
     .trim()
@@ -20,7 +27,7 @@ export const inventoryValidator = [
     .withMessage("Vendor name must contain alphabetic characters only")
     .isLength({ min: 3 })
     .withMessage("Vendor name must be at least 3 characters long"),
-
+  
   body("price")
   .trim()
   .notEmpty()
@@ -33,7 +40,7 @@ export const inventoryValidator = [
   .notEmpty()
   .withMessage("quantity is required")
   .isFloat({ min: 0 })
-    .withMessage("Quantity must be a non-negative number"),
+  .withMessage("Quantity must be a non-negative number"),
 
 
   body("status")
@@ -56,7 +63,13 @@ export const updateInventoryValidator = [
     .withMessage("Item name must contain alphabetic characters only")
     .isLength({ min: 3 })
     .withMessage("Item name must be at least 3 characters long"),
-
+   body("unit")
+    .trim()
+    .escape()
+    .isString()
+    .withMessage("Unit must be a string")
+    .isIn(["kg", "liter","ton"])
+    .withMessage("Unit must be one of: kg, liter,ton"),
   body("vendorName")
     .optional({ checkFalsy: true })
     .trim()
