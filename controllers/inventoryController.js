@@ -47,8 +47,8 @@ export const createInventoryItem = async (req, res) => {
       liter:  quantityReceived * 0.900,
       kg:     quantityReceived * 1,     
     };
-     const quantityValue = unitConversionMap[unit] ?? quantityReceived;
-
+    const quantityValue = unitConversionMap[unit] ?? quantityReceived;
+    
     const newItem = await inventoryModel.create({
       itemName,
       vendorName,
@@ -132,20 +132,25 @@ export const updateInventoryItem = async (req, res) => {
         });
       }
     }
-    
-     const unitConversionMap = {
-      ton:    quantityReceived * 1000,
-      liter:  quantityReceived * 0.900,
-      kg:     quantityReceived * 1,     
-    };
-const quantityValue = unitConversionMap[unit] ?? quantityReceived;
 
-    if (itemName)   item.itemName   = itemName;
-    if (vendorName) item.vendorName = vendorName;
-    if (price !== undefined)    item.price    = price;
-    if (quantityReceived !== undefined) item.quantityReceived = quantityReceived;
-    if (status)     item.status     = status;
-    if (unit)       item.unit       = unit;
+const finalUnit = unit ?? item.unit;
+const finalQtyReceived = quantityReceived !== undefined ? quantityReceived : item.quantityReceived;
+
+const unitConversionMap = {
+  ton:   finalQtyReceived * 1000,
+  liter: finalQtyReceived * 0.900,
+  kg:    finalQtyReceived * 1,
+};
+const quantityValue = unitConversionMap[finalUnit] ?? finalQtyReceived;
+
+if (itemName)   item.itemName   = itemName;
+if (vendorName) item.vendorName = vendorName;
+if (price !== undefined) item.price = price;
+if (quantityReceived !== undefined) item.quantityReceived = quantityReceived;
+if (status) item.status = status;
+if (unit)   item.unit   = unit;
+
+item.quantity = quantityValue;
     
     await item.save();
 

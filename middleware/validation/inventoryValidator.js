@@ -35,7 +35,7 @@ body("itemName")
   .isFloat({ min: 0 })
   .withMessage("Price must be a non-negative number"),
 
-  body("quantity")
+  body("quantityReceived")
   .trim()
   .notEmpty()
   .withMessage("quantity is required")
@@ -87,7 +87,7 @@ export const updateInventoryValidator = [
     .isFloat({ min: 0 })
     .withMessage("Price must be a non-negative number"),
 
-  body("quantity")
+  body("quantityReceived")
     .optional({ checkFalsy: true })
     .trim()
     .isFloat({ min: 0 })
