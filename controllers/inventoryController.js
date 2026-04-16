@@ -4,9 +4,20 @@ import mongoose from "mongoose";
 
 export const createInventoryItem = async (req, res) => {
   try {
-    const { itemName, vendorName, price, quantity, unit, status } = req.body;
+    const { itemName, vendorName, price, quantityReceived, unit, status } = req.body;
     const userId = req.id;
     const userRole = req.role;
+//  (for fake field)
+    const allowedFields = ["itemName", "vendorName", "price", "quantityReceived", "unit", "status"];
+    const unknownFields = Object.keys(req.body).filter((f) => !allowedFields.includes(f));
+
+  if (unknownFields.length > 0) {
+  return res.status(400).json({
+    message: `Invalid field(s): ${unknownFields.join(", ")}`,
+    success: false,
+    data: null,
+  });
+}
 
     if (!mongoose.Types.ObjectId.isValid(userId)) {
       return res.status(400).json({ message: "Invalid User ID", success: false, data: null });
@@ -32,17 +43,18 @@ export const createInventoryItem = async (req, res) => {
       });
     }
     const unitConversionMap = {
-      ton:    quantity * 1000,
-      liter:  quantity * 0.900,
-      kg:     quantity * 1,     
+      ton:    quantityReceived * 1000,
+      liter:  quantityReceived * 0.900,
+      kg:     quantityReceived * 1,     
     };
-     const quantityValue = unitConversionMap[unit] ?? quantity;
+     const quantityValue = unitConversionMap[unit] ?? quantityReceived;
 
     const newItem = await inventoryModel.create({
       itemName,
       vendorName,
       price,
       quantity: quantityValue,
+      quantityReceived,
       unit,
       status,
     });
@@ -61,9 +73,21 @@ export const createInventoryItem = async (req, res) => {
 export const updateInventoryItem = async (req, res) => {
   try {
     const { id } = req.params;
-    const { itemName, vendorName, price, quantity, status, unit } = req.body;
+    const { itemName, vendorName, price, quantityReceived, status, unit } = req.body;
     const userId = req.id;
     const userRole = req.role;
+
+//  (for fake field)
+      const allowedFields = ["itemName", "vendorName", "price", "quantityReceived", "unit", "status"];
+    const unknownFields = Object.keys(req.body).filter((f) => !allowedFields.includes(f));
+
+     if (unknownFields.length > 0) {
+  return res.status(400).json({
+    message: `Invalid field(s): ${unknownFields.join(", ")}`,
+    success: false,
+    data: null,
+  });
+}
 
     if (!mongoose.Types.ObjectId.isValid(userId)) {
       return res.status(400).json({ message: "Invalid User ID", success: false, data: null });
@@ -108,21 +132,21 @@ export const updateInventoryItem = async (req, res) => {
         });
       }
     }
+    
      const unitConversionMap = {
-      ton:    quantity * 1000,
-      liter:  quantity * 0.900,
-      kg:     quantity * 1,     
+      ton:    quantityReceived * 1000,
+      liter:  quantityReceived * 0.900,
+      kg:     quantityReceived * 1,     
     };
-const quantityValue = unitConversionMap[unit] ?? quantity;
-
+const quantityValue = unitConversionMap[unit] ?? quantityReceived;
 
     if (itemName)   item.itemName   = itemName;
     if (vendorName) item.vendorName = vendorName;
     if (price !== undefined)    item.price    = price;
-    if (quantity !== undefined) item.quantity = quantityValue;
+    if (quantityReceived !== undefined) item.quantityReceived = quantityReceived;
     if (status)     item.status     = status;
     if (unit)       item.unit       = unit;
-
+    
     await item.save();
 
     res.status(200).json({

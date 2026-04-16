@@ -22,19 +22,18 @@ const validateIngredients = (ingredients) => {
   }
   return null;
 };
-
-const calcCostPerMT = async (ingredients) => {
+const calCostPerMT = async (ingredients) => {
   const MT_IN_KG = 1000;
   let total = 0;
   const missing = [];
 
-  for (const ing of ingredients) {
+  for(const ing of ingredients) {
     const item = await inventoryModel.findOne({
-      itemName: { $regex: new RegExp(`^${ing.key}$`, "i") },
+    itemName: { $regex: new RegExp(`^${ing.key}$`, "i") },
     });
-    if (!item) {
+  if(!item){
       missing.push(ing.key);
-    } else {
+    }else {
       const kgNeeded = (ing.value / 100) * MT_IN_KG;
       total += kgNeeded * item.price;
     }
@@ -42,7 +41,6 @@ const calcCostPerMT = async (ingredients) => {
 
   return { costPerMT: Math.round(total), missing };
 };
-
 export const createFormula = async (req, res) => {
   try {
     const { formulaName, formulaCode, category, ingredients, description } = req.body;
@@ -101,7 +99,7 @@ export const createFormula = async (req, res) => {
     }
 
     // Cost calculation + missing check
-    const { costPerMT, missing } = await calcCostPerMT(ingredients);
+    const { costPerMT, missing } = await calCostPerMT(ingredients);
     if (missing.length > 0) {
       return res.status(400).json({
         message: `These ingredients are not in inventory: ${missing.join(", ")}`,
@@ -130,7 +128,6 @@ export const createFormula = async (req, res) => {
     return res.status(500).json({ message: "Server Error", success: false, data: null });
   }
 };
-
 export const updateFormula = async (req, res) => {
   try {
     const { id } = req.params;
@@ -205,7 +202,7 @@ export const updateFormula = async (req, res) => {
       if (ingError) {
         return res.status(400).json({ message: ingError, success: false, data: null });
       }
-      const { costPerMT, missing } = await calcCostPerMT(ingredients);
+      const { costPerMT, missing } = await calCostPerMT(ingredients);
       if (missing.length > 0) {
         return res.status(400).json({
           message: `These ingredients are not in inventory: ${missing.join(", ")}`,
@@ -229,7 +226,6 @@ export const updateFormula = async (req, res) => {
     return res.status(500).json({ message: "Server Error", success: false, data: null });
   }
 };
-
 export const getAllFormulas = async (req, res) => {
   try {
     const userId = req.id;
@@ -253,7 +249,6 @@ export const getAllFormulas = async (req, res) => {
     return res.status(500).json({ message: "Server Error", success: false, data: null });
   }
 };
-
 export const getFormulaById = async (req, res) => {
   try {
     const { id } = req.params;
@@ -285,7 +280,6 @@ export const getFormulaById = async (req, res) => {
     return res.status(500).json({ message: "Server Error", success: false, data: null });
   }
 };
-
 export const deleteFormula = async (req, res) => {
   try {
     const { id } = req.params;
@@ -321,7 +315,6 @@ export const deleteFormula = async (req, res) => {
     return res.status(500).json({ message: "Server Error", success: false, data: null });
   }
 };
-
 export const search = async (req, res) => {
   try {
     const userId     = req.id;
