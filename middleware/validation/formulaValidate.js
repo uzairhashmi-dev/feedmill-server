@@ -121,8 +121,6 @@ export const formulaUpdateValidator = [
     .withMessage("createdBy must be a valid MongoDB ObjectId"),
 ];
  
-
-
 export const handleValidationErrors = (req, res, next) => {
   const errors = validationResult(req);
   if (!errors.isEmpty()) {

@@ -1,26 +1,37 @@
 import inventoryModel from "../models/inventoryModel.js";
 import mongoose from "mongoose";
 
-
 export const createInventoryItem = async (req, res) => {
   try {
-    const { itemName, vendorName, price, quantityReceived, unit, status } = req.body;
+    const { itemName, vendorName, price, quantityReceived, unit, status } =
+      req.body;
     const userId = req.id;
     const userRole = req.role;
-//  (for fake field)
-    const allowedFields = ["itemName", "vendorName", "price", "quantityReceived", "unit", "status"];
-    const unknownFields = Object.keys(req.body).filter((f) => !allowedFields.includes(f));
+    //  (for fake field)
+    const allowedFields = [
+      "itemName",
+      "vendorName",
+      "price",
+      "quantityReceived",
+      "unit",
+      "status",
+    ];
+    const unknownFields = Object.keys(req.body).filter(
+      (f) => !allowedFields.includes(f),
+    );
 
-  if (unknownFields.length > 0) {
-  return res.status(400).json({
-    message: `Invalid field(s): ${unknownFields.join(", ")}`,
-    success: false,
-    data: null,
-  });
-}
+    if (unknownFields.length > 0) {
+      return res.status(400).json({
+        message: `Invalid field(s): ${unknownFields.join(", ")}`,
+        success: false,
+        data: null,
+      });
+    }
 
     if (!mongoose.Types.ObjectId.isValid(userId)) {
-      return res.status(400).json({ message: "Invalid User ID", success: false, data: null });
+      return res
+        .status(400)
+        .json({ message: "Invalid User ID", success: false, data: null });
     }
 
     if (userRole !== "admin" && userRole !== "manager") {
@@ -43,12 +54,13 @@ export const createInventoryItem = async (req, res) => {
       });
     }
     const unitConversionMap = {
-      ton:    quantityReceived * 1000,
-      liter:  quantityReceived * 0.900,
-      kg:     quantityReceived * 1,     
+      ton: quantityReceived * 1000,
+      liter: quantityReceived * 0.9,
+      kg: quantityReceived * 1,
     };
+
     const quantityValue = unitConversionMap[unit] ?? quantityReceived;
-    
+
     const newItem = await inventoryModel.create({
       itemName,
       vendorName,
@@ -64,33 +76,46 @@ export const createInventoryItem = async (req, res) => {
       success: true,
       data: newItem,
     });
-  }
-   catch (err) {
+  } catch (err) {
     console.error("createInventoryItem:", err);
-    res.status(500).json({ message: "Server Error", success: false, data: null });
+    res
+      .status(500)
+      .json({ message: "Server Error", success: false, data: null });
   }
 };
 export const updateInventoryItem = async (req, res) => {
   try {
     const { id } = req.params;
-    const { itemName, vendorName, price, quantityReceived, status, unit } = req.body;
+    const { itemName, vendorName, price, quantityReceived, status, unit } =
+      req.body;
     const userId = req.id;
     const userRole = req.role;
 
-//  (for fake field)
-      const allowedFields = ["itemName", "vendorName", "price", "quantityReceived", "unit", "status"];
-    const unknownFields = Object.keys(req.body).filter((f) => !allowedFields.includes(f));
+    //  (for fake field)
+    const allowedFields = [
+      "itemName",
+      "vendorName",
+      "price",
+      "quantityReceived",
+      "unit",
+      "status",
+    ];
+    const unknownFields = Object.keys(req.body).filter(
+      (f) => !allowedFields.includes(f),
+    );
 
-     if (unknownFields.length > 0) {
-  return res.status(400).json({
-    message: `Invalid field(s): ${unknownFields.join(", ")}`,
-    success: false,
-    data: null,
-  });
-}
+    if (unknownFields.length > 0) {
+      return res.status(400).json({
+        message: `Invalid field(s): ${unknownFields.join(", ")}`,
+        success: false,
+        data: null,
+      });
+    }
 
     if (!mongoose.Types.ObjectId.isValid(userId)) {
-      return res.status(400).json({ message: "Invalid User ID", success: false, data: null });
+      return res
+        .status(400)
+        .json({ message: "Invalid User ID", success: false, data: null });
     }
 
     if (!mongoose.Types.ObjectId.isValid(id)) {
@@ -133,27 +158,28 @@ export const updateInventoryItem = async (req, res) => {
       }
     }
 
-const finalUnit = unit ?? item.unit;
-const finalQtyReceived = quantityReceived !== undefined ? quantityReceived : item.quantityReceived;
+    const finalUnit = unit ?? item.unit;
+    const finalQtyReceived =
+      quantityReceived !== undefined ? quantityReceived : item.quantityReceived;
 
-const unitConversionMap = {
-  ton:   finalQtyReceived * 1000,
-  liter: finalQtyReceived * 0.900,
-  kg:    finalQtyReceived * 1,
-};
-const quantityValue = unitConversionMap[finalUnit] ?? finalQtyReceived;
+    const unitConversionMap = {
+      ton: finalQtyReceived * 1000,
+      liter: finalQtyReceived * 0.9,
+      kg: finalQtyReceived * 1,
+    };
+    const quantityValue = unitConversionMap[finalUnit] ?? finalQtyReceived;
 
-if (itemName)   item.itemName   = itemName;
-if (vendorName) item.vendorName = vendorName;
-if (price !== undefined) item.price = price;
-if (quantityReceived !== undefined) item.quantityReceived = quantityReceived;
-if (status) item.status = status;
-if (unit)   item.unit   = unit;
+    if (itemName) item.itemName = itemName;
+    if (vendorName) item.vendorName = vendorName;
+    if (price !== undefined) item.price = price;
+    if (quantityReceived !== undefined)
+      item.quantityReceived = quantityReceived;
+    if (status) item.status = status;
+    if (unit) item.unit = unit;
 
-item.quantity = quantityValue;
-    
+    item.quantity = quantityValue;
+
     await item.save();
-
     res.status(200).json({
       message: "Inventory item updated successfully",
       success: true,
@@ -161,7 +187,9 @@ item.quantity = quantityValue;
     });
   } catch (err) {
     console.error("updateInventoryItem:", err);
-    res.status(500).json({ message: "Server Error", success: false, data: null });
+    res
+      .status(500)
+      .json({ message: "Server Error", success: false, data: null });
   }
 };
 export const getAllInventoryItems = async (req, res) => {
@@ -169,7 +197,9 @@ export const getAllInventoryItems = async (req, res) => {
     const userId = req.id;
 
     if (!mongoose.Types.ObjectId.isValid(userId)) {
-      return res.status(400).json({ message: "Invalid User ID", success: false, data: null });
+      return res
+        .status(400)
+        .json({ message: "Invalid User ID", success: false, data: null });
     }
 
     const items = await inventoryModel.find().sort({ createdAt: -1 });
@@ -182,7 +212,9 @@ export const getAllInventoryItems = async (req, res) => {
     });
   } catch (err) {
     console.error("getAllInventoryItems:", err);
-    res.status(500).json({ message: "Server Error", success: false, data: null });
+    res
+      .status(500)
+      .json({ message: "Server Error", success: false, data: null });
   }
 };
 export const getInventoryItemById = async (req, res) => {
@@ -191,7 +223,9 @@ export const getInventoryItemById = async (req, res) => {
     const userId = req.id;
 
     if (!mongoose.Types.ObjectId.isValid(userId)) {
-      return res.status(400).json({ message: "Invalid User ID", success: false, data: null });
+      return res
+        .status(400)
+        .json({ message: "Invalid User ID", success: false, data: null });
     }
 
     if (!mongoose.Types.ObjectId.isValid(id)) {
@@ -218,7 +252,9 @@ export const getInventoryItemById = async (req, res) => {
     });
   } catch (err) {
     console.error("getInventoryItemById:", err);
-    res.status(500).json({ message: "Server Error", success: false, data: null });
+    res
+      .status(500)
+      .json({ message: "Server Error", success: false, data: null });
   }
 };
 export const deleteInventoryItem = async (req, res) => {
@@ -228,7 +264,9 @@ export const deleteInventoryItem = async (req, res) => {
     const userRole = req.role;
 
     if (!mongoose.Types.ObjectId.isValid(userId)) {
-      return res.status(400).json({ message: "Invalid User ID", success: false, data: null });
+      return res
+        .status(400)
+        .json({ message: "Invalid User ID", success: false, data: null });
     }
 
     if (!mongoose.Types.ObjectId.isValid(id)) {
@@ -263,7 +301,9 @@ export const deleteInventoryItem = async (req, res) => {
     });
   } catch (err) {
     console.error("deleteInventoryItem:", err);
-    res.status(500).json({ message: "Server Error", success: false, data: null });
+    res
+      .status(500)
+      .json({ message: "Server Error", success: false, data: null });
   }
 };
 export const searchInventoryItems = async (req, res) => {
@@ -272,23 +312,29 @@ export const searchInventoryItems = async (req, res) => {
     const searchTerm = req.query.search;
 
     if (!mongoose.Types.ObjectId.isValid(userId)) {
-      return res.status(400).json({ message: "Invalid User ID", success: false, data: null });
+      return res
+        .status(400)
+        .json({ message: "Invalid User ID", success: false, data: null });
     }
 
     if (!searchTerm) {
-      return res.status(400).json({ success: false, message: "Search term is required" });
+      return res
+        .status(400)
+        .json({ success: false, message: "Search term is required" });
     }
 
     const results = await inventoryModel.find({
       $or: [
-        { itemName:   { $regex: searchTerm, $options: "i" } },
+        { itemName: { $regex: searchTerm, $options: "i" } },
         { vendorName: { $regex: searchTerm, $options: "i" } },
-        { status:     { $regex: searchTerm, $options: "i" } },
+        { status: { $regex: searchTerm, $options: "i" } },
       ],
     });
 
     if (!results.length) {
-      return res.status(404).json({ success: false, message: "No inventory items found" });
+      return res
+        .status(404)
+        .json({ success: false, message: "No inventory items found" });
     }
 
     res.status(200).json({ success: true, data: results });
@@ -299,18 +345,21 @@ export const searchInventoryItems = async (req, res) => {
 };
 export const getFilteredOrders = async (req, res) => {
   try {
-    const { search, status, startDate, endDate, minPrice, maxPrice } = req.query;
+    const { search, status, startDate, endDate, minPrice, maxPrice } =
+      req.query;
     const userId = req.id;
 
     if (!mongoose.Types.ObjectId.isValid(userId)) {
-      return res.status(400).json({ message: "Invalid User ID", success: false, data: null });
+      return res
+        .status(400)
+        .json({ message: "Invalid User ID", success: false, data: null });
     }
 
     let query = {};
 
     if (search) {
       query.$or = [
-        { itemName:   { $regex: search, $options: "i" } },
+        { itemName: { $regex: search, $options: "i" } },
         { vendorName: { $regex: search, $options: "i" } },
       ];
     }
@@ -322,7 +371,10 @@ export const getFilteredOrders = async (req, res) => {
     if (startDate || endDate) {
       query.createdAt = {};
       if (startDate) query.createdAt.$gte = new Date(startDate);
-      if (endDate)   query.createdAt.$lte = new Date(new Date(endDate).setHours(23, 59, 59, 999));
+      if (endDate)
+        query.createdAt.$lte = new Date(
+          new Date(endDate).setHours(23, 59, 59, 999),
+        );
     }
 
     if (minPrice || maxPrice) {
@@ -334,7 +386,9 @@ export const getFilteredOrders = async (req, res) => {
     const orders = await inventoryModel.find(query).sort({ createdAt: -1 });
 
     if (!orders.length) {
-      return res.status(404).json({ success: false, message: "No orders found" });
+      return res
+        .status(404)
+        .json({ success: false, message: "No orders found" });
     }
 
     res.status(200).json({ success: true, data: orders });
@@ -348,7 +402,9 @@ export const getMonthlyStats = async (req, res) => {
     const userId = req.id;
 
     if (!mongoose.Types.ObjectId.isValid(userId)) {
-      return res.status(400).json({ message: "Invalid User ID", success: false, data: null });
+      return res
+        .status(400)
+        .json({ message: "Invalid User ID", success: false, data: null });
     }
 
     const now = new Date();
@@ -362,17 +418,16 @@ export const getMonthlyStats = async (req, res) => {
             { $count: "count" },
           ],
           receivedOrders: [
-            { $match: { status: "Received", createdAt: { $gte: startOfMonth } } },
+            {
+              $match: { status: "Received", createdAt: { $gte: startOfMonth } },
+            },
             { $count: "count" },
           ],
           pendingOrders: [
             { $match: { status: "Pending" } },
             { $count: "count" },
           ],
-          placedOrders: [
-            { $match: { status: "Placed" } },
-            { $count: "count" },
-          ],
+          placedOrders: [{ $match: { status: "Placed" } }, { $count: "count" }],
           thisMonthStats: [
             {
               $match: {
@@ -383,10 +438,17 @@ export const getMonthlyStats = async (req, res) => {
             {
               $group: {
                 _id: null,
-                monthlyTotalPrice:   {$sum: { $multiply: ["$price", "$quantity"]}},
-                totalQuantity:        { $sum: "$quantity" },
+                monthlyTotalPrice: {
+                  $sum: {
+                    $cond: {
+                      if: { $eq: ["$unit", "liter"] },
+                      then: { $multiply: ["$price", "$quantityReceived"] },
+                      else: { $multiply: ["$price", "$quantity"] },
+                    },
+                  },
+                },
+                totalQuantity: { $sum: "$quantity" },
               },
-              
             },
           ],
         },
@@ -406,10 +468,16 @@ export const getMonthlyStats = async (req, res) => {
             $ifNull: [{ $arrayElemAt: ["$placedOrders.count", 0] }, 0],
           },
           thisMonthTotalPrice: {
-            $ifNull: [{ $arrayElemAt: ["$thisMonthStats.monthlyTotalPrice", 0] }, 0],
+            $ifNull: [
+              { $arrayElemAt: ["$thisMonthStats.monthlyTotalPrice", 0] },
+              0,
+            ],
           },
           thisMonthTotalQuantity: {
-            $ifNull: [{ $arrayElemAt: ["$thisMonthStats.totalQuantity", 0] }, 0],
+            $ifNull: [
+              { $arrayElemAt: ["$thisMonthStats.totalQuantity", 0] },
+              0,
+            ],
           },
         },
       },
@@ -426,7 +494,9 @@ export const getTotalStats = async (req, res) => {
     const userId = req.id;
 
     if (!mongoose.Types.ObjectId.isValid(userId)) {
-      return res.status(400).json({ message: "Invalid User ID", success: false, data: null });
+      return res
+        .status(400)
+        .json({ message: "Invalid User ID", success: false, data: null });
     }
 
     const stats = await inventoryModel.aggregate([
@@ -438,16 +508,16 @@ export const getTotalStats = async (req, res) => {
             {
               $group: {
                 _id: null,
-                totalPrice:    { $sum: "$price" },
+                totalPrice: {
+                  $sum: {
+                    $cond: {
+                      if: { $eq: ["$unit", "liter"] },
+                      then: { $multiply: ["$price", "$quantityReceived"] }, // liter
+                      else: { $multiply: ["$price", "$quantity"] }, // ton/kg
+                    },
+                  },
+                },
                 totalQuantity: { $sum: "$quantity" },
-              },
-            },
-          ],
-          statusBreakdown: [
-            {
-              $group: {
-                _id: "$status",
-                count: { $sum: 1 },
               },
             },
           ],
@@ -462,7 +532,10 @@ export const getTotalStats = async (req, res) => {
             $ifNull: [{ $arrayElemAt: ["$totalRawMaterial.totalPrice", 0] }, 0],
           },
           totalQuantity: {
-            $ifNull: [{ $arrayElemAt: ["$totalRawMaterial.totalQuantity", 0] }, 0],
+            $ifNull: [
+              { $arrayElemAt: ["$totalRawMaterial.totalQuantity", 0] },
+              0,
+            ],
           },
           statusBreakdown: "$statusBreakdown",
         },
@@ -474,4 +547,4 @@ export const getTotalStats = async (req, res) => {
     console.error("getTotalStats:", err);
     res.status(500).json({ success: false, message: "Server Error" });
   }
-}
+};
