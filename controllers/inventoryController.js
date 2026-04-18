@@ -1,4 +1,5 @@
 import inventoryModel from "../models/inventoryModel.js";
+import formulaModel from "../models/formulaModel.js";
 import mongoose from "mongoose";
 
 export const createInventoryItem = async (req, res) => {
@@ -285,21 +286,41 @@ export const deleteInventoryItem = async (req, res) => {
       });
     }
 
-    const deletedItem = await inventoryModel.findByIdAndDelete(id);
-    if (!deletedItem) {
-      return res.status(404).json({
-        message: "Inventory item not found",
-        success: false,
-        data: null,
-      });
-    }
 
-    res.status(200).json({
-      message: "Inventory item deleted successfully",
-      success: true,
-      data: deletedItem,
+const item = await inventoryModel.findById(id);
+if (!item) {
+return res.status(404).json(
+    { 
+      message: "Inventory item not found",
+      success: false,
+      data: null
     });
-  } catch (err) {
+}
+
+const usedInFormula = await formulaModel.findOne({
+  ingredients:{
+  $elemMatch:{ key: { $regex: new RegExp(`^${item.itemName}$`, "i") } },
+  },
+});
+
+if (usedInFormula) {
+  return res.status(400).json({
+    message: `This inventory item cannot be deleted because it is used in formula: "${usedInFormula.formulaName}"`,
+    success: false,
+    data: null,
+  });
+}
+
+await item.deleteOne();
+
+res.status(200).json(
+{ message: "Inventory item deleted successfully",
+   success: true,
+    data: item
+});
+
+} 
+  catch (err) {
     console.error("deleteInventoryItem:", err);
     res
       .status(500)
