@@ -38,7 +38,6 @@ app.use("/api/auth",authRoutes)
 app.use("/api/inventory",inventoryRoutes)
 app.use("/api/formula",formulationRoute)
 app.use("/api/category",categoryRoutes)
-app.use("/api/category",categoryRoutes)
 app.use("/api/production",productionRoutes)
 
 app.all("*", (req, res) => {
