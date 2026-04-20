@@ -23,7 +23,7 @@ body("itemName")
     .escape()
     .isString()
     .withMessage("Vendor name must be a string")
-    .matches(/^[a-zA-Z\.(),\s]+$/)
+    .matches(/^[a-zA-Z&./-_=\.(),\s]+$/)
     .withMessage("Vendor name must contain alphabetic characters only")
     .isLength({ min: 3 })
     .withMessage("Vendor name must be at least 3 characters long"),
@@ -76,7 +76,7 @@ export const updateInventoryValidator = [
     .escape()
     .isString()
     .withMessage("Vendor name must be a string")
-    .matches(/^[a-zA-Z\.,()/\s]+$/)
+    .matches(/^[a-zA-Z&./-_=\.,()/\s]+$/)
     .withMessage("vendor name must contain alphabetic characters only")
     .isLength({ min: 3 })
     .withMessage("Vendor name must be at least 3 characters long"),
