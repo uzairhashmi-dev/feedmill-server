@@ -183,7 +183,7 @@ if (price) {
       if (invItem){
         const kgNeeded = (ing.value / 100) * MT_IN_KG;
         // Agar yeh wahi item hai jo update ho rahi hai tu naya price use karo
-        newCost += kgNeeded * (ing.key.toLowerCase() === item.itemdName.toLowerCase() ? price : invItem.price);
+        newCost += kgNeeded * (ing.key.toLowerCase() === item.itemName.toLowerCase() ? price : invItem.price);
     }}
     formula.costPerMT = Math.round(newCost);
     await formula.save();
