@@ -136,7 +136,7 @@ export const updateInventoryItem = async (req, res) => {
     }
 
     const item = await inventoryModel.findById(id);
-    if (!item) {
+    if(!item) {
       return res.status(404).json({
         message: "Inventory item not found",
         success: false,
@@ -158,6 +158,37 @@ export const updateInventoryItem = async (req, res) => {
         });
       }
     }
+
+
+    // Agar price change hui hai tu saare related formulas ka costPerMT recalculate karo
+if (price) {
+  const MT_IN_KG = 1000;
+
+  // Saare wo formulas dhundo jisme yeh item ingredient hai
+  const relatedFormulas = await formulaModel.find({
+    ingredients: {
+      $elemMatch: { key: { $regex: new RegExp(`^${item.itemName}$`, "i") } },
+    },
+  });
+
+  // Har formula ka costPerMT recalculate karo
+  for(const formula of relatedFormulas) {
+    let newCost = 0;
+
+    for (const ing of formula.ingredients) {
+      // Har ingredient ki latest price inventory se lo
+      const invItem = await inventoryModel.findOne({
+        itemName: { $regex: new RegExp(`^${ing.key}$`, "i") },
+      });
+      if (invItem){
+        const kgNeeded = (ing.value / 100) * MT_IN_KG;
+        // Agar yeh wahi item hai jo update ho rahi hai tu naya price use karo
+        newCost += kgNeeded * (ing.key.toLowerCase() === item.itemdName.toLowerCase() ? price : invItem.price);
+    }}
+    formula.costPerMT = Math.round(newCost);
+    await formula.save();
+  }
+}
 
     const finalUnit = unit ?? item.unit;
     const finalQtyReceived =
@@ -474,7 +505,7 @@ export const getMonthlyStats = async (req, res) => {
           ],
         },
       },
-      {
+      { 
         $project: {
           totalOrders: {
             $ifNull: [{ $arrayElemAt: ["$totalOrders.count", 0] }, 0],
@@ -494,7 +525,7 @@ export const getMonthlyStats = async (req, res) => {
               0,
             ],
           },
-          thisMonthTotalQuantity: {
+            thisMonthTotalQuantity: {
             $ifNull: [
               { $arrayElemAt: ["$thisMonthStats.totalQuantity", 0] },
               0,
@@ -504,7 +535,13 @@ export const getMonthlyStats = async (req, res) => {
       },
     ]);
 
-    res.status(200).json({ success: true, monthlyStats: stats[0] });
+    res.status(200).json(
+      { 
+        success: true,
+         monthlyStats: stats[0]
+         }
+        );
+       
   } catch (err) {
     console.error("getMonthlyStats:", err);
     res.status(500).json({ success: false, message: "Server Error" });
