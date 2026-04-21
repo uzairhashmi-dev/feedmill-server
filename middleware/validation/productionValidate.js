@@ -18,15 +18,15 @@ export const productionValidator = [
     .isMongoId()
     .withMessage("Formula must be a valid MongoDB ObjectId"),
 
-  body("targetMT")
+  body("quantity")
     .notEmpty()
-    .withMessage("Target MT is required")
+    .withMessage("quantity is required")
     .isFloat({ gt: 0 })
-    .withMessage("Target MT must be a positive number"),
+    .withMessage("quantity must be a positive number"),
 
   body("status")
     .optional()
-    .isIn(["Queued", "Running", "Completed", "Cancelled"])
+    .isIn([ "Running", "Completed", "Cancelled","Queued",])
     .withMessage("Status must be one of: Queued, Running, Completed, Cancelled"),
 ];
 
@@ -49,10 +49,10 @@ export const productionUpdateValidator = [
     .isMongoId()
     .withMessage("Formula must be a valid MongoDB ObjectId"),
 
-  body("targetMT")
+  body("quantity")
     .optional()
     .isFloat({ gt: 0 })
-    .withMessage("Target MT must be a positive number"),
+    .withMessage("quantity must be a positive number"),
 
   body("waste")
     .optional()
@@ -76,3 +76,5 @@ export const handleValidationErrors = (req, res, next) => {
   }
   next();
 };
+
+
