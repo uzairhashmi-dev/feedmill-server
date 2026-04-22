@@ -354,37 +354,55 @@ export const getProductionById = async (req, res) => {
     return res.status(500).json({ message: "Server Error", success: false, data: null });
   }
 };
-// export const deleteProduction = async (req, res) => {
-//   try {
-//     const { id } = req.params;
-//     const userId   = req.id;
-//     const userRole = req.role;
+export const deleteProduction = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const userId   = req.id;
+    const userRole = req.role;
 
-//     if (!mongoose.Types.ObjectId.isValid(userId)) {
-//       return res.status(400).json({ message: "Invalid User ID", success: false, data: null });
-//     }
-//     if (!mongoose.Types.ObjectId.isValid(id)) {
-//       return res.status(400).json({ message: "Invalid Production ID", success: false, data: null });
-//     }
-//     if (userRole !== "admin" && userRole !== "manager") {
-//       return res.status(403).json({
-//         message: "Forbidden – only admin or manager can delete a production",
-//         success: false,
-//         data: null,
-//       });
-//     }
+    if (!mongoose.Types.ObjectId.isValid(userId)) {
+      return res.status(400).json({ message: "Invalid User ID", success: false, data: null });
+    }
+    if (!mongoose.Types.ObjectId.isValid(id)) {
+      return res.status(400).json({ message: "Invalid Production ID", success: false, data: null });
+    }
+    if (userRole !== "admin" && userRole !== "manager") {
+      return res.status(403).json({
+        message: "Forbidden – only admin or manager can delete a production",
+        success: false,
+        data: null,
+      });
+    }
+    const production = await productionModel.findById(id);
 
-//     const deleted = await productionModel.findByIdAndDelete(id);
-//     if (!deleted) {
-//       return res.status(404).json({ message: "Production not found", success: false, data: null });
-//     }
+    if (!production) {
+      return res.status(404).json({
+        message: "Production not found",
+        success: false,
+        data: null,
+      });
+    }
 
-//     return res.status(200).json({ message: "Production deleted successfully", success: true, data: deleted });
-//   } catch (err) {
-//     console.error("deleteProduction:", err);
-//     return res.status(500).json({ message: "Server Error", success: false, data: null });
-//   }
-// };
+    
+    if (production.status === "Completed" || production.status === "Running") {
+      return res.status(400).json({
+        message: `Cannot delete production with status ${production.status}`,
+        success: false,
+        data: null,
+      });
+    }
+
+    const deleted = await productionModel.findByIdAndDelete(id);
+    if (!deleted) {
+      return res.status(404).json({ message: "Production not found", success: false, data: null });
+    }
+
+    return res.status(200).json({ message: "Production deleted successfully", success: true, data: deleted });
+  } catch (err) {
+    console.error("deleteProduction:", err);
+    return res.status(500).json({ message: "Server Error", success: false, data: null });
+  }
+};
 export const searchProduction = async (req, res) => {
   try {
     const userId     = req.id;

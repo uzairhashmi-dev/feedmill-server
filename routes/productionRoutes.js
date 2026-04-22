@@ -4,7 +4,7 @@ import {
   updateProduction,
   getAllProductions,
   getProductionById,
-  // deleteProduction,
+  deleteProduction,
   searchProduction,
   getProductionMonthlyStats,
   getProductionTotalStats,
@@ -28,7 +28,7 @@ router.get("/MonthlyStats",getProductionTotalStats);
 router.get("/getTotalStats", getProductionTotalStats);
 router.get("/:id",        getProductionById);
 router.put("/update/:id", PUV, HVE, updateProduction);
-// router.delete("/delete/:id", deleteProduction);
+router.delete("/delete/:id", deleteProduction);
 
 export default router;
 
