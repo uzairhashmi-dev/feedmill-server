@@ -64,7 +64,6 @@ export const productionUpdateValidator = [
     .isIn(["Queued", "Running", "Completed", "Cancelled"])
     .withMessage("Status must be one of: Queued, Running, Completed, Cancelled"),
 ];
-
 export const handleValidationErrors = (req, res, next) => {
   const errors = validationResult(req);
   if (!errors.isEmpty()) {

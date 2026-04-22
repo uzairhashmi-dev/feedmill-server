@@ -354,37 +354,37 @@ export const getProductionById = async (req, res) => {
     return res.status(500).json({ message: "Server Error", success: false, data: null });
   }
 };
-export const deleteProduction = async (req, res) => {
-  try {
-    const { id } = req.params;
-    const userId   = req.id;
-    const userRole = req.role;
+// export const deleteProduction = async (req, res) => {
+//   try {
+//     const { id } = req.params;
+//     const userId   = req.id;
+//     const userRole = req.role;
 
-    if (!mongoose.Types.ObjectId.isValid(userId)) {
-      return res.status(400).json({ message: "Invalid User ID", success: false, data: null });
-    }
-    if (!mongoose.Types.ObjectId.isValid(id)) {
-      return res.status(400).json({ message: "Invalid Production ID", success: false, data: null });
-    }
-    if (userRole !== "admin" && userRole !== "manager") {
-      return res.status(403).json({
-        message: "Forbidden – only admin or manager can delete a production",
-        success: false,
-        data: null,
-      });
-    }
+//     if (!mongoose.Types.ObjectId.isValid(userId)) {
+//       return res.status(400).json({ message: "Invalid User ID", success: false, data: null });
+//     }
+//     if (!mongoose.Types.ObjectId.isValid(id)) {
+//       return res.status(400).json({ message: "Invalid Production ID", success: false, data: null });
+//     }
+//     if (userRole !== "admin" && userRole !== "manager") {
+//       return res.status(403).json({
+//         message: "Forbidden – only admin or manager can delete a production",
+//         success: false,
+//         data: null,
+//       });
+//     }
 
-    const deleted = await productionModel.findByIdAndDelete(id);
-    if (!deleted) {
-      return res.status(404).json({ message: "Production not found", success: false, data: null });
-    }
+//     const deleted = await productionModel.findByIdAndDelete(id);
+//     if (!deleted) {
+//       return res.status(404).json({ message: "Production not found", success: false, data: null });
+//     }
 
-    return res.status(200).json({ message: "Production deleted successfully", success: true, data: deleted });
-  } catch (err) {
-    console.error("deleteProduction:", err);
-    return res.status(500).json({ message: "Server Error", success: false, data: null });
-  }
-};
+//     return res.status(200).json({ message: "Production deleted successfully", success: true, data: deleted });
+//   } catch (err) {
+//     console.error("deleteProduction:", err);
+//     return res.status(500).json({ message: "Server Error", success: false, data: null });
+//   }
+// };
 export const searchProduction = async (req, res) => {
   try {
     const userId     = req.id;
@@ -417,185 +417,174 @@ export const searchProduction = async (req, res) => {
     return res.status(500).json({ success: false, message: "Server Error" });
   }
 };
+export const getProductionMonthlyStats = async (req, res) => {
+  try {
+    const userId = req.id;
+    if (!mongoose.Types.ObjectId.isValid(userId)) {
+      return res.status(400).json({ message: "Invalid User ID", success: false, data: null });
+    }
+
+    const now          = new Date();
+    const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
+    const stats = await productionModel.aggregate([
+      {
+        $facet: {
+          // Is mahine ki total batches
+          totalBatches: [
+            { $match: { createdAt: { $gte: startOfMonth } } },
+            { $count: "count" },
+          ],
+          // Is mahine completed batches
+          completedBatches: [
+            { $match: { status: "Completed", createdAt: { $gte: startOfMonth } } },
+            { $count: "count" },
+          ],
+          // Running batches (overall — ongoing)
+          runningBatches: [
+            { $match: { status: "Running" } },
+            { $count: "count" },
+          ],
+          // Queued batches (overall — pending)
+          queuedBatches: [
+            { $match: { status: "Queued" } },
+            { $count: "count" },
+          ],
+          // Cancelled batches (overall)
+          cancelledBatches: [
+            { $match: { status: "Cancelled" } },
+            { $count: "count" },
+          ],
+          // Is mahine ki cost + production + waste — sirf Completed
+          thisMonthStats: [
+            {
+              $match: {
+                createdAt: { $gte: startOfMonth },
+                status: { $in: ["Completed", "Running"] },
+              },
+            },
+            {
+              $group: {
+                _id:                null,
+                monthlyTotalCost:   { $sum: "$totalCost" },
+                monthlyProduction:  { $sum: "$production" },  // KG output
+                monthlyWaste:       { $sum: "$waste" },
+              },
+            },
+          ],
+        },
+      },
+      {
+        $project: {
+          totalBatches: {
+            $ifNull: [{ $arrayElemAt: ["$totalBatches.count",     0] }, 0],
+          },
+          completedBatches: {
+            $ifNull: [{ $arrayElemAt: ["$completedBatches.count", 0] }, 0],
+          },
+          runningBatches: {
+            $ifNull: [{ $arrayElemAt: ["$runningBatches.count",   0] }, 0],
+          },
+          queuedBatches: {
+            $ifNull: [{ $arrayElemAt: ["$queuedBatches.count",    0] }, 0],
+          },
+          cancelledBatches: {
+            $ifNull: [{ $arrayElemAt: ["$cancelledBatches.count", 0] }, 0],
+          },
+          thisMonthTotalCost: {
+            $ifNull: [{ $arrayElemAt: ["$thisMonthStats.monthlyTotalCost",  0] }, 0],
+          },
+          thisMonthProduction: {
+            $ifNull: [{ $arrayElemAt: ["$thisMonthStats.monthlyProduction", 0] }, 0],
+          },
+          thisMonthWaste: {
+            $ifNull: [{ $arrayElemAt: ["$thisMonthStats.monthlyWaste",      0] }, 0],
+          },
+        },
+      },
+    ]);
+
+    return res.status(200).json({
+      success:      true,
+      monthlyStats: stats[0],
+    });
+
+    
+  } catch (err) {
+    console.error("getProductionMonthlyStats:", err);
+    return res.status(500).json({ success: false, message: "Server Error" });
+  }
+};
+export const getProductionTotalStats = async (req, res) => {
+  try {
+    const userId = req.id;
+    if (!mongoose.Types.ObjectId.isValid(userId)) {
+      return res.status(400).json({ message: "Invalid User ID", success: false, data: null });
+    }
+
+    const stats = await productionModel.aggregate([
+      {
+        $facet: {
+          // Overall total batches
+          totalBatches: [{ $count: "count" }],
+
+          // Status-wise counts
+          completedBatches: [{ $match: { status: "Completed" } }, { $count: "count" }],
+          runningBatches:   [{ $match: { status: "Running"   } }, { $count: "count" }],
+          queuedBatches:    [{ $match: { status: "Queued"    } }, { $count: "count" }],
+          cancelledBatches: [{ $match: { status: "Cancelled" } }, { $count: "count" }],
+
+          // Overall totals — sirf Completed batches se
+          overallStats: [
+            { $match: { status: { $in: ["Completed", "Running"] } } },
+            {
+              $group: {
+                _id:            null,
+                totalCost:      { $sum: "$totalCost" },
+                totalProduction:{ $sum: "$production" }, // total KG output
+                totalWaste:     { $sum: "$waste" },
+              },
+            },
+          ],
+        },
+      },
+      {
+        $project: {
+          totalBatches: {
+            $ifNull: [{ $arrayElemAt: ["$totalBatches.count",      0] }, 0],
+          },
+          completedBatches: {
+            $ifNull: [{ $arrayElemAt: ["$completedBatches.count",  0] }, 0],
+          },
+          runningBatches: {
+            $ifNull: [{ $arrayElemAt: ["$runningBatches.count",    0] }, 0],
+          },
+          queuedBatches: {
+            $ifNull: [{ $arrayElemAt: ["$queuedBatches.count",     0] }, 0],
+          },
+          cancelledBatches: {
+            $ifNull: [{ $arrayElemAt: ["$cancelledBatches.count",  0] }, 0],
+          },
+          totalCost: {
+            $ifNull: [{ $arrayElemAt: ["$overallStats.totalCost",       0] }, 0],
+          },
+          totalProduction: {
+            $ifNull: [{ $arrayElemAt: ["$overallStats.totalProduction",  0] }, 0],
+          },
+          totalWaste: {
+            $ifNull: [{ $arrayElemAt: ["$overallStats.totalWaste",       0] }, 0],
+          },
+        },
+      },
+    ]);
+
+    return res.status(200).json({
+      success:    true,
+      totalStats: stats[0],
+    });
+  } catch (err) {
+    console.error("getProductionTotalStats:", err);
+    return res.status(500).json({ success: false, message: "Server Error" });
+  }
+};
 
 
-
-
-
-
-
-
-
-
-// export const getProductionMonthlyStats = async (req, res) => {
-//   try {
-//     const userId = req.id;
-//     if (!mongoose.Types.ObjectId.isValid(userId)) {
-//       return res.status(400).json({ message: "Invalid User ID", success: false, data: null });
-//     }
-
-//     const now          = new Date();
-//     const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
-
-//     const stats = await productionModel.aggregate([
-//       {
-//         $facet: {
-//           // Is mahine ki total batches
-//           totalBatches: [
-//             { $match: { createdAt: { $gte: startOfMonth } } },
-//             { $count: "count" },
-//           ],
-//           // Is mahine completed batches
-//           completedBatches: [
-//             { $match: { status: "Completed", createdAt: { $gte: startOfMonth } } },
-//             { $count: "count" },
-//           ],
-//           // Running batches (overall — ongoing)
-//           runningBatches: [
-//             { $match: { status: "Running" } },
-//             { $count: "count" },
-//           ],
-//           // Queued batches (overall — pending)
-//           queuedBatches: [
-//             { $match: { status: "Queued" } },
-//             { $count: "count" },
-//           ],
-//           // Cancelled batches (overall)
-//           cancelledBatches: [
-//             { $match: { status: "Cancelled" } },
-//             { $count: "count" },
-//           ],
-//           // Is mahine ki cost + production + waste — sirf Completed
-//           thisMonthStats: [
-//             {
-//               $match: {
-//                 createdAt: { $gte: startOfMonth },
-//                 status:    "Completed",
-//               },
-//             },
-//             {
-//               $group: {
-//                 _id:                null,
-//                 monthlyTotalCost:   { $sum: "$totalCost" },
-//                 monthlyProduction:  { $sum: "$production" },  // KG output
-//                 monthlyWaste:       { $sum: "$waste" },
-//               },
-//             },
-//           ],
-//         },
-//       },
-//       {
-//         $project: {
-//           totalBatches: {
-//             $ifNull: [{ $arrayElemAt: ["$totalBatches.count",     0] }, 0],
-//           },
-//           completedBatches: {
-//             $ifNull: [{ $arrayElemAt: ["$completedBatches.count", 0] }, 0],
-//           },
-//           runningBatches: {
-//             $ifNull: [{ $arrayElemAt: ["$runningBatches.count",   0] }, 0],
-//           },
-//           queuedBatches: {
-//             $ifNull: [{ $arrayElemAt: ["$queuedBatches.count",    0] }, 0],
-//           },
-//           cancelledBatches: {
-//             $ifNull: [{ $arrayElemAt: ["$cancelledBatches.count", 0] }, 0],
-//           },
-//           thisMonthTotalCost: {
-//             $ifNull: [{ $arrayElemAt: ["$thisMonthStats.monthlyTotalCost",  0] }, 0],
-//           },
-//           thisMonthProduction: {
-//             $ifNull: [{ $arrayElemAt: ["$thisMonthStats.monthlyProduction", 0] }, 0],
-//           },
-//           thisMonthWaste: {
-//             $ifNull: [{ $arrayElemAt: ["$thisMonthStats.monthlyWaste",      0] }, 0],
-//           },
-//         },
-//       },
-//     ]);
-
-//     return res.status(200).json({
-//       success:      true,
-//       monthlyStats: stats[0],
-//     });
-//   } catch (err) {
-//     console.error("getProductionMonthlyStats:", err);
-//     return res.status(500).json({ success: false, message: "Server Error" });
-//   }
-// };
-
-// ─────────────────────────────────────────────────────────────
-// TASK 4: TOTAL STATS — inventory jaisi style
-// ─────────────────────────────────────────────────────────────
-// export const getProductionTotalStats = async (req, res) => {
-//   try {
-//     const userId = req.id;
-//     if (!mongoose.Types.ObjectId.isValid(userId)) {
-//       return res.status(400).json({ message: "Invalid User ID", success: false, data: null });
-//     }
-
-//     const stats = await productionModel.aggregate([
-//       {
-//         $facet: {
-//           // Overall total batches
-//           totalBatches: [{ $count: "count" }],
-
-//           // Status-wise counts
-//           completedBatches: [{ $match: { status: "Completed" } }, { $count: "count" }],
-//           runningBatches:   [{ $match: { status: "Running"   } }, { $count: "count" }],
-//           queuedBatches:    [{ $match: { status: "Queued"    } }, { $count: "count" }],
-//           cancelledBatches: [{ $match: { status: "Cancelled" } }, { $count: "count" }],
-
-//           // Overall totals — sirf Completed batches se
-//           overallStats: [
-//             { $match: { status: "Completed" } },
-//             {
-//               $group: {
-//                 _id:            null,
-//                 totalCost:      { $sum: "$totalCost" },
-//                 totalProduction:{ $sum: "$production" }, // total KG output
-//                 totalWaste:     { $sum: "$waste" },
-//               },
-//             },
-//           ],
-//         },
-//       },
-//       {
-//         $project: {
-//           totalBatches: {
-//             $ifNull: [{ $arrayElemAt: ["$totalBatches.count",      0] }, 0],
-//           },
-//           completedBatches: {
-//             $ifNull: [{ $arrayElemAt: ["$completedBatches.count",  0] }, 0],
-//           },
-//           runningBatches: {
-//             $ifNull: [{ $arrayElemAt: ["$runningBatches.count",    0] }, 0],
-//           },
-//           queuedBatches: {
-//             $ifNull: [{ $arrayElemAt: ["$queuedBatches.count",     0] }, 0],
-//           },
-//           cancelledBatches: {
-//             $ifNull: [{ $arrayElemAt: ["$cancelledBatches.count",  0] }, 0],
-//           },
-//           totalCost: {
-//             $ifNull: [{ $arrayElemAt: ["$overallStats.totalCost",       0] }, 0],
-//           },
-//           totalProduction: {
-//             $ifNull: [{ $arrayElemAt: ["$overallStats.totalProduction",  0] }, 0],
-//           },
-//           totalWaste: {
-//             $ifNull: [{ $arrayElemAt: ["$overallStats.totalWaste",       0] }, 0],
-//           },
-//         },
-//       },
-//     ]);
-
-//     return res.status(200).json({
-//       success:    true,
-//       totalStats: stats[0],
-//     });
-//   } catch (err) {
-//     console.error("getProductionTotalStats:", err);
-//     return res.status(500).json({ success: false, message: "Server Error" });
-//   }
-// };

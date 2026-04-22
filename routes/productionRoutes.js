@@ -6,6 +6,8 @@ import {
   getProductionById,
   deleteProduction,
   searchProduction,
+  getProductionMonthlyStats,
+  getProductionTotalStats,
 } from "../controllers/productionController.js";
 import { isLogin } from "../middleware/isAuthenticated.js";
 import {
@@ -18,11 +20,17 @@ const router = express.Router();
 router.use(isLogin);
 
 // Specific routes BEFORE param routes
+
 router.get("/search",     searchProduction);
 router.get("/all",        getAllProductions);
 router.post("/create",    PV,  HVE, createProduction);
-router.put("/update/:id", PUV, HVE, updateProduction);
+router.get("/MonthlyStats",getProductionTotalStats);
+router.get("/getTotalStats", getProductionTotalStats);
 router.get("/:id",        getProductionById);
-router.delete("/delete/:id", deleteProduction);
+router.put("/update/:id", PUV, HVE, updateProduction);
+// router.delete("/delete/:id", deleteProduction);
 
 export default router;
+
+
+
