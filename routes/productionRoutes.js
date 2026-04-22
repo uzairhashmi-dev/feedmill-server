@@ -4,7 +4,7 @@ import {
   updateProduction,
   getAllProductions,
   getProductionById,
-  deleteProduction,
+  // deleteProduction,
   searchProduction,
   getProductionMonthlyStats,
   getProductionTotalStats,
