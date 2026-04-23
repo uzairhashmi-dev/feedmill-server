@@ -386,7 +386,7 @@ export const deleteProduction = async (req, res) => {
     
     if (production.status === "Completed" || production.status === "Running") {
       return res.status(400).json({
-        message: `Cannot delete production with status ${production.status}`,
+        message: `Cannot delete production with status ${production.status}"`,
         success: false,
         data: null,
       });

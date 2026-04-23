@@ -18,6 +18,7 @@ import inventoryRoutes from "./routes/inventoryRoutes.js";
 import formulationRoute from "./routes/formulasRoute.js";
 import categoryRoutes from "./routes/categoryRoutes.js";
 import productionRoutes from "./routes/productionRoutes.js";
+import orderRoutes from "./routes/orderRoutes.js"
 
 dotenv.config({});
 connectDB();
@@ -39,6 +40,7 @@ app.use("/api/inventory",inventoryRoutes)
 app.use("/api/formula",formulationRoute)
 app.use("/api/category",categoryRoutes)
 app.use("/api/production",productionRoutes)
+app.use("/api/order",orderRoutes)
 
 app.all("*", (req, res) => {
   // SETTING STATUS

@@ -9,6 +9,7 @@ const productionSchema = new mongoose.Schema(
       required: true,
     },
     quantity: { type: Number, required: true },
+    availableKG: { type: Number, default: 0 },
     unit: {
       type: String,
       enum: ["kg", "liter", "ton"],
