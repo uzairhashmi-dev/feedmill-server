@@ -1,7 +1,7 @@
 import express from "express";
 import {
     createOrder,
-    // getAllOrders,
+    getAllOrders,
     // getSingleOrder,
     updateOrder,
     deleteOrder,
@@ -23,7 +23,7 @@ const router = express.Router();
 router.use(isLogin);
 
 router.post("/create",OV, HVE, createOrder);
-// router.get("/all",getAllOrders);
+router.get("/all",getAllOrders);
 router.get("/search",searchOrders);
 router.get("/MonthlyStats",getOrderMonthlyStats);
 router.get("/getTotalStats",getOrderTotalStats);

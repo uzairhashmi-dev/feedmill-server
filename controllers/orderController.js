@@ -61,7 +61,25 @@ const syncProductionAvailable = async (formulaId) => {
     remainingSold -= deduct;
   }
 };
+export const getAllOrders = async (req, res) => {
+  try {
+    const orders = await orderModel
+      .find()
+      .populate("formula", "formulaName formulaCode")
+      .populate("created", "name email")
+      .sort({ createdAt: -1 });
 
+    return res.status(200).json({
+      success: true,
+      data: orders,
+    });
+  } catch (err) {
+    return res.status(500).json({
+      success: false,
+      message: "Server Error"
+    });
+  }
+};
 export const createOrder = async (req, res) => {
   try {
     const { customerName, formulaId, quantity, unit, price, paymentPaid, status } = req.body;
